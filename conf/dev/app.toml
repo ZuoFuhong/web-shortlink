@@ -1,0 +1,9 @@
+[redis]
+addr = "47.98.199.80"
+pwd = "myredis"
+db = 0
+
+[mysql]
+addr = "47.98.199.80"
+username = "root"
+password = "123456"
