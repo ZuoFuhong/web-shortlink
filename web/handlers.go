@@ -5,6 +5,7 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/gorilla/mux"
 	"net/http"
+	"web-shortlink/conf"
 	"web-shortlink/defs"
 	"web-shortlink/storage"
 )
@@ -12,8 +13,8 @@ import (
 var s storage.Storage
 
 func init() {
-	// todo: 读取配置文件
-	s = storage.NewRedisCli("47.98.199.80:6379", "myredis", 0)
+	redis := conf.C.Redis
+	s = storage.NewRedisCli(redis.Addr, redis.Pwd, redis.Db)
 }
 
 func createShortUrl(w http.ResponseWriter, r *http.Request) {

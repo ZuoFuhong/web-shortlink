@@ -10,5 +10,5 @@ require (
 	github.com/justinas/alice v1.2.0
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mattheath/base62 v0.0.0-20150408093626-b80cdc656a7a
-	github.com/spf13/viper v1.6.2 // indirect
+	github.com/spf13/viper v1.6.2
 )

@@ -29,9 +29,6 @@ var C *Conf
 func init() {
 	env := getMode()
 	realPath, _ := filepath.Abs("./")
-
-	fmt.Println(realPath)
-
 	viper.SetConfigName("app")
 	viper.AddConfigPath(realPath + "/conf/" + env)
 	err := viper.ReadInConfig()
