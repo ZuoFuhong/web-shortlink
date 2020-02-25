@@ -9,9 +9,9 @@ else
 mkdir target
 fi
 # linux
-#GOOS=linux GOARCH=amd64 go build -o ./target/yx-batch-exec main.go
+#GOOS=linux GOARCH=amd64 go build -o ./target/web-shortlink main.go
 # windows
-#GOOS=windows GOARCH=amd64 go build -o ./target/yx-batch-exec.exe main.go
+#GOOS=windows GOARCH=amd64 go build -o ./target/web-shortlink main.go
 # macOS
 go build -o ./target/web-shortlink main.go
 cp -rf conf ./target/
