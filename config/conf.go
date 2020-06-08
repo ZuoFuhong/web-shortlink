@@ -1,15 +1,21 @@
-package conf
+package config
 
 import (
 	"fmt"
 	"github.com/spf13/viper"
+	"log"
 	"os"
-	"path/filepath"
 )
 
 type Conf struct {
-	Redis Redis
-	MySQL Mysql
+	Server Server
+	Redis  Redis
+	MySQL  Mysql
+}
+
+type Server struct {
+	Addr string
+	Port int
 }
 
 type Redis struct {
@@ -24,23 +30,21 @@ type Mysql struct {
 	Password string
 }
 
-var C *Conf
-
-func init() {
+func LoadConf() *Conf {
 	env := getMode()
-	realPath, _ := filepath.Abs("./")
-	viper.SetConfigName("app")
-	viper.AddConfigPath(realPath + "/conf/" + env)
+	viper.SetConfigName("application-" + env)
+	viper.AddConfigPath("conf/")
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
 
-	C = &Conf{}
-	err = viper.Unmarshal(C)
+	conf := new(Conf)
+	err = viper.Unmarshal(&conf)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
+	return conf
 }
 
 func getMode() string {

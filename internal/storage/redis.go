@@ -7,7 +7,8 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/mattheath/base62"
 	"time"
-	"web-shortlink/utils"
+	"web-shortlink/internal/defs"
+	"web-shortlink/internal/util"
 )
 
 const (
@@ -23,12 +24,6 @@ const (
 
 type RedisCli struct {
 	Cli *redis.Client
-}
-
-type URLDetail struct {
-	URL                 string        `json:"url"`
-	CreatedAt           string        `json:"created_at"`
-	ExpirationInMinutes time.Duration `json:"expiration_in_minutes"`
 }
 
 func NewRedisCli(addr, passwd string, db int) *RedisCli {
@@ -47,7 +42,7 @@ func NewRedisCli(addr, passwd string, db int) *RedisCli {
 // Shorten convert url to shortlink
 func (r *RedisCli) Shorten(url string, exp int64) (string, error) {
 	// convert url to sha1 hash
-	h := utils.ToSha1(url)
+	h := util.ToSha1(url)
 
 	// fetch it if the url is cached
 	d, err := r.Cli.Get(fmt.Sprintf(URLHashKey, h)).Result()
@@ -84,7 +79,7 @@ func (r *RedisCli) Shorten(url string, exp int64) (string, error) {
 		return "", err
 	}
 
-	details, err := json.Marshal(&URLDetail{
+	details, err := json.Marshal(&defs.URLDetail{
 		URL:                 url,
 		CreatedAt:           time.Now().String(),
 		ExpirationInMinutes: time.Duration(exp),
@@ -103,7 +98,7 @@ func (r *RedisCli) Shorten(url string, exp int64) (string, error) {
 }
 
 // Shortlink returns the detail of the shortlink
-func (r *RedisCli) ShortlinkInfo(eid string) (interface{}, error) {
+func (r *RedisCli) ShortlinkInfo(eid string) (string, error) {
 	d, err := r.Cli.Get(fmt.Sprintf(ShortlinkDetailKey, eid)).Result()
 	if err == redis.Nil {
 		return "", errors.New("unknown short URL")
