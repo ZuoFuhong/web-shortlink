@@ -45,7 +45,7 @@ Response：
 > 2.短地址还原接口
 
 ```
-> GET /api/info?shortUrl=8dxu
+> GET /api/info?url=8dxu
 Response：
   {
       "code": "0",
