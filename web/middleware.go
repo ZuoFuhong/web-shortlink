@@ -1,71 +1,28 @@
 package web
 
 import (
-	"encoding/json"
-	"io"
+	"context"
+	"github.com/google/uuid"
 	"log"
 	"net/http"
-	"runtime"
-	"time"
-	"web-shortlink/internal/errs"
+	"web-shortlink/consts"
 )
 
-type middleware struct{}
-
-var Middleware = new(middleware)
-
-func (m middleware) LoggingHandler(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		startTime := time.Now()
-		next.ServeHTTP(w, r)
-		log.Printf("[%s] %q %v", r.Method, r.URL.String(), time.Now().Sub(startTime))
-	}
-	return http.HandlerFunc(fn)
+type Middleware struct {
 }
 
-func (m middleware) CORSHandler(next http.Handler) http.Handler {
+func NewMiddleware() *Middleware {
+	return &Middleware{}
+}
+
+func (m *Middleware) RequestMetricHandler(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		header := w.Header()
-		header.Set("Access-Control-Allow-Origin", "*")
-		header.Set("Access-Control-Allow-Headers", "*")
-		header.Set("Access-Control-Allow-Credentials", "true")
-		header.Set("Access-Control-Allow-Methods", "POST,GET,DELETE,PUT,OPTIONS")
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
+		// Inject traceId to context
+		traceId, _ := uuid.NewUUID()
+		r = r.WithContext(context.WithValue(r.Context(), consts.TraceKey, traceId.String()))
+		log.Printf("%s %s %q\n", traceId, r.Method, r.URL.String())
+		w.Header().Add("Trace_id", traceId.String())
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)
-}
-
-func (m middleware) RecoverPanic(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		defer func() {
-			if err := recover(); err != nil {
-				var httpErr errs.HttpErr
-				log.Printf("Recover from panic:%+v", err)
-				printStack()
-				switch err.(type) {
-				case errs.HttpErr:
-					httpErr = err.(errs.HttpErr)
-				default:
-					httpErr = errs.ServerInternalError
-				}
-
-				w.Header().Add("Content-Type", "application/json;charset=UTF-8")
-				w.WriteHeader(httpErr.HttpSC)
-				resStr, _ := json.Marshal(httpErr.Err)
-				_, _ = io.WriteString(w, string(resStr))
-			}
-		}()
-		next.ServeHTTP(w, r)
-	}
-	return http.HandlerFunc(fn)
-}
-
-func printStack() {
-	var buf [4096]byte
-	n := runtime.Stack(buf[:], false)
-	log.Print(string(buf[:n]))
 }

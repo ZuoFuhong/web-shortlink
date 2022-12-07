@@ -1,7 +1,17 @@
 package main
 
-import "web-shortlink/web"
+import (
+	"log"
+	"web-shortlink/app/interfaces"
+	"web-shortlink/web"
+)
 
 func main() {
-	web.NewApp().Run()
+	log.SetFlags(log.Lshortfile | log.Ltime | log.Ldate)
+	s := web.NewServer()
+	service := interfaces.InitializeService()
+	s.Register(service)
+	if err := s.Serve(); err != nil {
+		log.Fatal(err)
+	}
 }

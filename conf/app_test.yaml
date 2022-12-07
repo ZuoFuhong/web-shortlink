@@ -1,0 +1,8 @@
+server:
+  name: web-shortlink
+  addr: 127.0.0.1
+  port: 8080
+  domain: http://127.0.0.1:8080
+
+redis:
+  dsn: redis://:123456@127.0.0.1:6379/0?dial_timeout=3s&read_timeout=5s&max_retries=2
