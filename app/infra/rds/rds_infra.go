@@ -41,3 +41,8 @@ func (s *Infra) GetInt64(ctx context.Context, key string) (int64, error) {
 func (s *Infra) Incr(ctx context.Context, key string) (int64, error) {
 	return s.rdb.Incr(ctx, key).Result()
 }
+
+func (s *Infra) RunScript(ctx context.Context, script string, keys []string, args []interface{}) error {
+	luaScript := redis.NewScript(script)
+	return luaScript.Run(ctx, s.rdb, keys, args).Err()
+}

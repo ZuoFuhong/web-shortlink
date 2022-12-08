@@ -54,15 +54,6 @@ func (r *ShortLinkService) Shorten(ctx context.Context, url string, exp int32) (
 	} else {
 		return d, nil
 	}
-	eid := generateEid(url)
-	// store the url against this encoded id
-	if err = r.rds.Set(ctx, fmt.Sprintf(ShortlinkKey, eid), url, time.Minute*time.Duration(exp)); err != nil {
-		return "", err
-	}
-	// store the url against the hash of it
-	if err = r.rds.Set(ctx, fmt.Sprintf(URLHashKey, hv), eid, time.Minute*time.Duration(exp)); err != nil {
-		return "", err
-	}
 	shortLinkBytes, err := json.Marshal(&entity.ShortLinkInfo{
 		URL:                 url,
 		ExpirationInMinutes: exp,
@@ -71,9 +62,18 @@ func (r *ShortLinkService) Shorten(ctx context.Context, url string, exp int32) (
 	if err != nil {
 		return "", err
 	}
-	// store the url detail against this encoded id
-	if err = r.rds.Set(ctx, fmt.Sprintf(ShortlinkDetailKey, eid), shortLinkBytes, time.Minute*time.Duration(exp)); err != nil {
-		return "", nil
+	// 生成短地址
+	eid := generateEid(url)
+	// 使用 Lua 减少调用
+	err = r.rds.RunScript(ctx, `
+redis.call("SET", KEYS[1], ARGV[1], "EX", ARGV[4])
+redis.call("SET", KEYS[2], ARGV[2], "EX", ARGV[4])
+redis.call("SET", KEYS[3], ARGV[3], "EX", ARGV[4])
+return 1
+`, []string{fmt.Sprintf(ShortlinkKey, eid), fmt.Sprintf(URLHashKey, hv), fmt.Sprintf(ShortlinkDetailKey, eid)},
+		[]interface{}{url, eid, shortLinkBytes, exp * 60})
+	if err != nil {
+		return "", err
 	}
 	return eid, nil
 }
