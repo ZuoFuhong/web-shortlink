@@ -21,6 +21,7 @@ func NewRouter() *Router {
 }
 
 func (r *Router) registerHandler(shortService *interfaces.ShortLinkServiceImpl) {
+	r.Handle("/ping", r.ch.ThenFunc(shortService.Ping)).Methods("GET")
 	r.Handle("/api/v1/shorten", r.ch.ThenFunc(shortService.CreateShortUrl)).Methods("POST")
 	r.Handle("/api/v1/short_info/{eid:[a-zA-Z0-9]{1,10}}", r.ch.ThenFunc(shortService.GetShortLinkInfo)).Methods("GET")
 	r.Handle("/{eid:[a-zA-Z0-9]{1,10}}", r.ch.ThenFunc(shortService.Redirect)).Methods("GET")
